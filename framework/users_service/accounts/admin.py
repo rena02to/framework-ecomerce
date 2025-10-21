@@ -76,6 +76,6 @@ class EmployeeProfileAdmin(admin.ModelAdmin):
     autocomplete_fields = ("user",)
 
 
-admin.site.site_url = "SGBD - Reservas para Hotel"
-admin.site.index_title = "SGBD - Reservas para Hotel"
-admin.site.site_header = "SGBD - Reservas para Hotel"
+admin.site.site_url = "SGBD - Serviço de usuários"
+admin.site.index_title = "SGBD - Serviço de usuários"
+admin.site.site_header = "SGBD - Serviço de usuários"

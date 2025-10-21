@@ -49,3 +49,8 @@ class FeatureProductAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
     search_fields = ("id", "name")
+
+
+admin.site.site_url = "SGBD - Serviço de produtos"
+admin.site.index_title = "SGBD - Serviço de produtos"
+admin.site.site_header = "SGBD - Serviço de produtos"

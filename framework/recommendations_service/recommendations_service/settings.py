@@ -7,7 +7,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = int(os.getenv("DEBUG", "0")) == 1
 
-ALLOWED_HOSTS = []
+CORS_ALLOW_CREDENTIALS = True
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "users_service",
+    "nginx_gateway",
+]
+CORS_ALLOW_ALL_ORIGINS = True
 
 INSTALLED_APPS = [
     "daphne",
@@ -23,16 +30,16 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
-ROOT_URLCONF = "recomendations_service.urls"
+ROOT_URLCONF = "recommendations_service.urls"
 
 TEMPLATES = [
     {
@@ -49,7 +56,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "recomendations_service.wsgi.application"
+WSGI_APPLICATION = "recommendations_service.wsgi.application"
 
 DATABASES = {
     "default": {
@@ -81,5 +88,10 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Maceio"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "static/"
+STATIC_URL = "/api/recomendations/static/"
+STATIC_ROOT = "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+USE_X_FORWARDED_HOST = True
+FORCE_SCRIPT_NAME = "/api/recomendations"

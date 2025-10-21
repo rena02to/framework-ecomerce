@@ -3,7 +3,7 @@ from django.db import transaction
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password, role=None, **extra_fields):
+    def create_user(self, email, password, **extra_fields):
         from .models import EmployeeProfile, User
 
         if not email:
@@ -19,7 +19,7 @@ class UserManager(BaseUserManager):
             user.set_password(password)
             user.save(using=self._db)
 
-            EmployeeProfile.objects.create(user=user, role=role)
+            EmployeeProfile.objects.create(user=user)
 
         return user
 
