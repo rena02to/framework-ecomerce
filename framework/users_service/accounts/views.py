@@ -50,7 +50,9 @@ class LoginView(APIView):
                 httponly=True,
             )
             return response
-        return Response({"message": "E-mail ou senha incorretos."})
+        return Response(
+            {"message": "E-mail ou senha incorretos."}, status=status.HTTP_404_NOT_FOUND
+        )
 
 
 class LogoutView(APIView):
