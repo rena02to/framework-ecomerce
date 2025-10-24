@@ -16,7 +16,6 @@ class ProductAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created_at", "updated_at")
     search_fields = ("id", "name", "code")
-    list_select_related = ("categories",)
     autocomplete_fields = ("categories",)
 
     def display_categories(self, obj):
@@ -31,7 +30,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ImageProduct)
 class ImageProductAdmin(admin.ModelAdmin):
-    list_display = ("id", "product", "image", "main")
+    list_display = ("id", "product", "image")
     search_fields = ("id", "product__id", "product__code")
     autocomplete_fields = ("product",)
     list_select_related = ("product",)

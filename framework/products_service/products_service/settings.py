@@ -12,7 +12,15 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "users_service",
+    "products_service",
+    "orders_service",
+    "carts_service",
+    "recomendations_service",
     "nginx_gateway",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -95,3 +103,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 USE_X_FORWARDED_HOST = True
 FORCE_SCRIPT_NAME = "/api/products"
+
+MEDIA_URL = "/api/products/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")

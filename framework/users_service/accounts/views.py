@@ -9,6 +9,7 @@ from django.db import transaction
 from django.contrib.auth import get_user_model
 from .models import ClientProfile, EmployeeProfile
 import pytz
+from .serializers import MeSerializer
 
 User = get_user_model()
 
@@ -81,11 +82,18 @@ class RefreshTokenView(APIView):
         pass
 
 
-class UserTokenView(APIView):
+class UserMeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        pass
+        try:
+            serializer = MeSerializer(request.user)
+            return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar os dados do usuário: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ClientView(APIView):

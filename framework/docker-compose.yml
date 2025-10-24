@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - products_media:/app/media
     depends_on:
       - users_service
       - products_service
@@ -104,6 +105,7 @@ services:
       DB_USER: ${PRODUCTS_SERVICE_USER}
     volumes:
       - ./products_service:/app
+      - products_media:/app/media
     ports:
       - "8003:8000"
     depends_on:
@@ -205,3 +207,4 @@ volumes:
   orders_data:
   recommendations_data:
   carts_data:
+  products_media:

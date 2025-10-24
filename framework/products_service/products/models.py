@@ -10,7 +10,7 @@ def image_product_upload_to(instance, filename):
 
 class Product(models.Model):
     name = models.CharField(max_length=150)
-    description = models.TextField(validators=[MaxLengthValidator(500)])
+    description = models.TextField(validators=[MaxLengthValidator(1500)])
     value = models.DecimalField(max_digits=15, decimal_places=2)
     stock = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -32,7 +32,6 @@ class ImageProduct(models.Model):
         "Product", on_delete=models.PROTECT, related_name="photo_product"
     )
     image = models.ImageField(upload_to=image_product_upload_to)
-    main = models.BooleanField(default=True)
 
 
 class FeatureProduct(models.Model):
@@ -47,4 +46,4 @@ class FeatureProduct(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)

@@ -12,6 +12,10 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "users_service",
+    "products_service",
+    "orders_service",
+    "carts_service",
+    "recomendations_service",
     "nginx_gateway",
 ]
 CSRF_TRUSTED_ORIGINS = [
@@ -64,6 +68,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "users_service.wsgi.application"
 AUTH_USER_MODEL = "accounts.User"
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "accounts.authentication.CookieJWTAuthentication",
+    ),
+}
 
 DATABASES = {
     "default": {
