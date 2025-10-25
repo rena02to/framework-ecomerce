@@ -1,3 +1,5 @@
+from functools import partial
+from itertools import product
 from os import access
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -5,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 from products_service.utils.requests import call_service
-from .models import Category, ImageProduct, FeatureProduct
-from .serializers import CategorySerializer, ProductCreateSerializer
+from .models import Category, ImageProduct, FeatureProduct, Product
+from .serializers import CategorySerializer, ProductCreateSerializer, ProductSerializer
 import json
 
 
@@ -162,7 +164,7 @@ class ProductView(APIView):
 
             if serializer.is_valid():
                 product = serializer.save()
-                for index, image in enumerate(images):
+                for image in images:
                     ImageProduct.objects.create(product=product, image=image)
                 for feature in features:
                     FeatureProduct.objects.create(
@@ -180,6 +182,111 @@ class ProductView(APIView):
             )
         except Exception as e:
             return Response(
-                {"message": f"Ocorreu um erro ao criar o produto : {e}"},
+                {"message": f"Ocorreu um erro ao criar o produto: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get(self, request):
+        try:
+            pass
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar os produtos: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ProductDetailView(APIView):
+    def get(self, request, id):
+        try:
+            product = Product.objects.get(id=id)
+            serializer = ProductSerializer(product, many=False)
+            return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+        except Product.DoesNotExist:
+            return Response(
+                {"message": "Este produto não existe"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar o produto: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def delete(self, request, id):
+        try:
+            purchases = False
+            # consultar o serviço orders para verificar se este produto já possui compras vinculadas
+            if not purchases:
+                product = Product.objects.get(id=id)
+                ImageProduct.objects.filter(product__id=id).delete()
+                FeatureProduct.objects.filter(product__id=id).delete()
+                product.delete()
+                return Response(
+                    {"message": "Produto deletado com sucesso"},
+                    status=status.HTTP_200_OK,
+                )
+            return Response(
+                {
+                    "message": "Já foram realizadas compras desse produto. Não é possível deletá-lo."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {"message": "Este produto não existe"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao deletar o produto: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def patch(self, request, id):
+        try:
+            product = Product.objects.get(id=id)
+            data = request.data.copy()
+
+            images = request.FILES.getlist("image")
+            if images:
+                images = images[:5]
+            features = request.data.getlist("feature", [])[:25]
+            if features:
+                features = [json.loads(item) for item in features]
+            if data.get("description"):
+                data["description"] = data.get("description", "")[:1500]
+            if data.get("value"):
+                data["value"] = int(float(data["value"]) * 100) / 100
+
+            serializer = ProductCreateSerializer(product, data=data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                ImageProduct.objects.filter(product__id=id).delete()
+                FeatureProduct.objects.filter(product__id=id).delete()
+                for image in images:
+                    ImageProduct.objects.create(product=product, image=image)
+                for feature in features:
+                    FeatureProduct.objects.create(
+                        product=product, name=feature["name"], value=feature["value"]
+                    )
+                return Response(
+                    {"message": "Produto editado com sucesso."},
+                    status=status.HTTP_200_OK,
+                )
+            return Response(
+                {
+                    "message": f"Ocorreu um erro ao atualizar o produto: {serializer.errors}"
+                }
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {"message": "Este produto não existe"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao atualizar o produto: {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
