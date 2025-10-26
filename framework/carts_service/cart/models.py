@@ -10,7 +10,9 @@ class Cart(models.Model):
 
 
 class ProductCart(models.Model):
-    cart = models.OneToOneField("Cart", on_delete=models.PROTECT)
+    cart = models.ForeignKey(
+        "Cart", related_name="cart_product", on_delete=models.PROTECT
+    )
     product_id = models.IntegerField(unique=True)
     amount = models.IntegerField(default=1)
     updated_at = models.DateTimeField(auto_now=True)

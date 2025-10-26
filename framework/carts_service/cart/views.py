@@ -118,21 +118,21 @@ class CartProductView(APIView):
 
             user_id = user_data["data"].get("id")
             cart = Cart.objects.get(user_id=user_id).id
-            products = ProductCart.objects.filter(cart__id=cart).order_by("updated_at")
+            products = ProductCart.objects.filter(cart__id=cart).order_by("-updated_at")
             data = []
             for product in products:
                 return_product = call_service(
                     f"http://nginx_gateway:8000/api/products/{product.product_id}/",
                     access_token,
                 )
-                if not return_product:
+                if not return_product or not return_product["data"]:
                     return Response(
                         {
                             "message": "Ocorreu um erro ao buscar os produtos no carrinho."
                         },
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
-                data["data"].append(return_product)
+                data.append(return_product["data"])
 
             return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
