@@ -1,9 +1,19 @@
 import requests
 
 
-def call_service(self, url, token):
-    cookies = {"token": token}
+def call_service(url, token):
+    cookies = {"access_token": token}
     r = requests.get(url, cookies=cookies)
     if r.status_code != 200:
+        return None
+    return r.json()
+
+
+def call_service_product(url, token):
+    cookies = {"access_token": token}
+    r = requests.get(url, cookies=cookies)
+    if r.status_code != 200:
+        if r.status_code == 404:
+            return {"data": None}
         return None
     return r.json()

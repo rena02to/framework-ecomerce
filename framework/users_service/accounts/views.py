@@ -10,6 +10,8 @@ from django.contrib.auth import get_user_model
 from .models import ClientProfile, EmployeeProfile
 import pytz
 from .serializers import MeSerializer
+from users_service.utils.requests import call_service_cart
+from django.conf import settings
 
 User = get_user_model()
 
@@ -135,6 +137,15 @@ class ClientView(APIView):
                 user.full_clean()
                 user.save()
                 client, _ = ClientProfile.objects.get_or_create(user=user)
+                cart_data = call_service_cart(
+                    f"http://nginx_gateway:8000/api/carts/{user.id}/",
+                    settings.INTERNAL_SERVICE_TOKEN,
+                )
+                if not cart_data:
+                    return Response(
+                        {"message": "Ocorreu um erro ao criar o carrinho do cliente"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
 
                 return Response(
                     {

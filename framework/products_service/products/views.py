@@ -24,9 +24,9 @@ class CategoryView(APIView):
 
             user_data = call_service(
                 "http://nginx_gateway:8000/api/users/me/", access_token
-            )["data"]
+            )
 
-            if not user_data.get("is_employee") or not user_data:
+            if not user_data or not user_data["data"].get("is_employee"):
                 return Response(
                     {
                         "message": "Usuário sem permissão para criar categorias de produto"
@@ -69,9 +69,9 @@ class CategoryDetailView(APIView):
 
             user_data = call_service(
                 "http://nginx_gateway:8000/api/users/me/", access_token
-            )["data"]
+            )
 
-            if not user_data.get("is_employee") or not user_data:
+            if not user_data or user_data["data"].get("is_employee"):
                 return Response(
                     {
                         "message": "Usuário sem permissão para criar categorias de produto"
@@ -104,9 +104,9 @@ class CategoryDetailView(APIView):
 
             user_data = call_service(
                 "http://nginx_gateway:8000/api/users/me/", access_token
-            )["data"]
+            )
 
-            if not user_data.get("is_employee") or not user_data:
+            if not user_data or not user_data["data"].get("is_employee"):
                 return Response(
                     {
                         "message": "Usuário sem permissão para criar categorias de produto"

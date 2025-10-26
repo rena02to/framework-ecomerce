@@ -6,6 +6,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = int(os.getenv("DEBUG", "0")) == 1
+INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
 
 CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = [
@@ -96,7 +97,7 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Maceio"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "/api/carts/static"
+STATIC_URL = "/api/carts/static/"
 STATIC_ROOT = "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
