@@ -3,7 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order, ProductOrder, Shipping, TrackingStatus, TrackingEvent
 from rest_framework import status
-from orders_service.utils.requests import call_service, call_service_update_cart
+from orders_service.utils.requests import (
+    call_service,
+    call_service_patch,
+    call_service_update_cart,
+)
 from .serializers import OrderSerializer, OrderViewSerializer, PaymentMethodSerializer
 from django.db import transaction
 from datetime import datetime
@@ -131,6 +135,18 @@ class OrderView(APIView):
                         value=product_order.get("value"),
                         amount=product_order.get("amount"),
                     )
+                    update_stock = call_service_patch(
+                        f"http://nginx_gateway:8000/api/products/{product_order.get("product_id")}",
+                        access_token,
+                        {
+                            "quantity_sold": product_order.get("amount"),
+                        },
+                    )
+                    if update_stock["status_code"] != 200:
+                        return Response(
+                            {"message": update_stock.get("data").get("message")},
+                            status=update_stock["status_code"],
+                        )
 
                 return Response(
                     {

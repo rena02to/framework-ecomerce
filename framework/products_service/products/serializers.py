@@ -10,14 +10,10 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ProductCreateSerializer(serializers.ModelSerializer):
-    categories = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Category.objects.all()
-    )
-
+class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["name", "description", "value", "stock", "categories"]
+        fields = ["stock"]
 
 
 class ImageProductSerializer(serializers.ModelSerializer):

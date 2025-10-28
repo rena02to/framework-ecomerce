@@ -102,4 +102,4 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 USE_X_FORWARDED_HOST = True
-FORCE_SCRIPT_NAME = "/api/recomendations"
+FORCE_SCRIPT_NAME = "/api/recommendations"
