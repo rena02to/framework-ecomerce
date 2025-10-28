@@ -59,10 +59,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(ClientProfile)
 class ClientProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "user",
-    )
+    list_display = ("id", "user", "address")
     search_fields = ("user__email", "user__phone")
     list_select_related = ("user",)
     autocomplete_fields = ("user",)

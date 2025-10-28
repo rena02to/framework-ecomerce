@@ -79,6 +79,7 @@ class ClientProfile(models.Model):
     user = models.OneToOneField(
         "User", on_delete=models.PROTECT, related_name="client_profile"
     )
+    address = models.CharField(max_length=255, blank=True, null=True)
 
     def clean(self):
         super().clean()

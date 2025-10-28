@@ -141,73 +141,15 @@ class ClientView(APIView):
                     f"http://nginx_gateway:8000/api/carts/{user.id}/",
                     settings.INTERNAL_SERVICE_TOKEN,
                 )
-                if not cart_data:
+                if cart_data["status_code"] != 201:
                     return Response(
                         {"message": "Ocorreu um erro ao criar o carrinho do cliente"},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        status=cart_data["status_code"],
                     )
 
                 return Response(
                     {
                         "message": "Cliente criado com sucesso",
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-            return Response(
-                {"message": "Você não tem permissão para esta ação."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        except Exception as e:
-            return Response(
-                {"message": f"Ocorreu um erro ao tentar criar cliente: {e}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-
-class EmployeeView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @transaction.atomic
-    def post(self, request):
-        try:
-            if hasattr(request.user, "employee_profile"):
-                email = request.data.get("email")
-                name = request.data.get("name")
-                phone = request.data.get("phone")
-                birth_date = request.data.get("birth_date")
-
-                if not email or not name or not phone or not birth_date:
-                    return Response(
-                        {"message": "Campos obrigatórios faltando."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                user, _ = User.objects.get_or_create(
-                    email=email,
-                )
-                if hasattr(user, "employee_profile"):
-                    user.is_employee = True
-                    user.save()
-                    return Response(
-                        {"message": "Já existe uma conta com este e-mail!"},
-                        status=status.HTTP_409_CONFLICT,
-                    )
-                user.name = name
-                user.phone = phone
-                user.birth_date = birth_date
-                user.is_employee = True
-                if user.has_usable_password():
-                    pass
-
-                user.full_clean()
-                user.save()
-                employee, _ = EmployeeProfile.objects.update_or_create(
-                    user=user,
-                )
-
-                return Response(
-                    {
-                        "message": "Funcionário criado com sucesso",
                     },
                     status=status.HTTP_201_CREATED,
                 )

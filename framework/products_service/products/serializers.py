@@ -37,6 +37,7 @@ class ProductSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField()
     features = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
+    value_unformat = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -49,10 +50,14 @@ class ProductSerializer(serializers.ModelSerializer):
             "categories",
             "images",
             "features",
+            "value_unformat",
         ]
 
     def get_value(self, obj):
         return format_currency(obj.value, "BRL", locale="pt_BR")
+
+    def get_value_unformat(self, obj):
+        return obj.value
 
     def get_features(self, obj):
         features = FeatureProduct.objects.filter(product__id=obj.id)

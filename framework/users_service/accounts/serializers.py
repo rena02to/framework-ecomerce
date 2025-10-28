@@ -8,6 +8,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ["inactivation_date"]
 
 
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClientProfile()
+        fields = ["address"]
+
+
 class MeSerializer(serializers.ModelSerializer):
     client = serializers.SerializerMethodField()
     employee = serializers.SerializerMethodField()
@@ -27,6 +33,8 @@ class MeSerializer(serializers.ModelSerializer):
         ]
 
     def get_client(self, obj):
+        if hasattr(obj, "client_profile"):
+            return ClientSerializer(obj.client_profile).data
         return None
 
     def get_employee(self, obj):

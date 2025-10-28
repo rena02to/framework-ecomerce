@@ -5,6 +5,7 @@ from rest_framework import status
 from .models import Cart, ProductCart
 from carts_service.utils.requests import call_service, call_service_product
 from django.conf import settings
+from .serializers import ProductCartSerializer
 
 
 class CartView(APIView):
@@ -42,17 +43,26 @@ class CartProductView(APIView):
                 "http://nginx_gateway:8000/api/users/me/", access_token
             )
 
-            if not user_data or not user_data["data"].get("is_client"):
+            if user_data["status_code"] != 200:
+                return Response(
+                    {"message": user_data.get("data").get("message")},
+                    status=user_data["status_code"],
+                )
+            if not user_data.get("data").get("data").get("is_client"):
                 return Response(
                     {"message": "Você não possui uma conta de cliente. Cadastre-se."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-            user_id = user_data["data"].get("id")
+            user_id = user_data.get("data").get("data").get("id")
             product = request.data.get("product")
             amount = request.data.get("amount")
-            if amount and not str(amount).isdigit():
-                amount = None
+
+            try:
+                amount = int(amount)
+            except (TypeError, ValueError):
+                amount = 1
+
             if not product:
                 return Response(
                     {"message": "Há campos obrigatórios ausentes"},
@@ -63,31 +73,29 @@ class CartProductView(APIView):
                 f"http://nginx_gateway:8000/api/products/{product}/", access_token
             )
 
-            if not product_data:
+            if product_data["status_code"] != 200:
                 return Response(
-                    {"message": "Ocorreu um erro ao buscar o produto"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-            if not product_data["data"]:
-                return Response(
-                    {"message": "Este produto não existe."},
-                    status=status.HTTP_404_NOT_FOUND,
+                    {"message": user_data.get("data").get("message")},
+                    status=product_data["status_code"],
                 )
 
             cart = Cart.objects.get(user_id=user_id)
             product_instance = ProductCart.objects.filter(product_id=product)
             if not product_instance:
-                ProductCart.objects.create(
-                    cart=cart, product_id=product, amount=amount if amount else 1
-                )
+                if amount > 0 or not amount:
+                    ProductCart.objects.create(
+                        cart=cart, product_id=product, amount=amount
+                    )
             else:
                 product = product_instance.first()
-                product.amount = product.amount + (int(amount) if amount else 1)
-                product.save()
+                if product.amount + amount > 0 and amount > 0:
+                    product.amount = product.amount + amount
+                    product.save()
+                else:
+                    product.delete()
 
             return Response(
-                {"message": "Produto adicionado ao carrinho."},
+                {"message": "Carrinho atualizado."},
                 status=status.HTTP_200_OK,
             )
 
@@ -110,13 +118,18 @@ class CartProductView(APIView):
                 "http://nginx_gateway:8000/api/users/me/", access_token
             )
 
-            if not user_data or not user_data["data"].get("is_client"):
+            if user_data["status_code"] != 200:
+                return Response(
+                    {"message": user_data.get("data").get("message")},
+                    status=user_data["status_code"],
+                )
+            if not user_data.get("data").get("data").get("is_client"):
                 return Response(
                     {"message": "Você não possui uma conta de cliente. Cadastre-se."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-            user_id = user_data["data"].get("id")
+            user_id = user_data.get("data").get("data").get("id")
             cart = Cart.objects.get(user_id=user_id).id
             products = ProductCart.objects.filter(cart__id=cart).order_by("-updated_at")
             data = []
@@ -125,18 +138,58 @@ class CartProductView(APIView):
                     f"http://nginx_gateway:8000/api/products/{product.product_id}/",
                     access_token,
                 )
-                if not return_product or not return_product["data"]:
+                if return_product["status_code"] != 200:
                     return Response(
-                        {
-                            "message": "Ocorreu um erro ao buscar os produtos no carrinho."
-                        },
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        {"message": user_data.get("data").get("message")},
+                        status=return_product["status_code"],
                     )
-                data.append(return_product["data"])
+                data.append(return_product.get("data"))
 
             return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {"message": f"Ocorreu um erro ao buscar os produtos no carrinho: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ProductCartView(APIView):
+    def get(self, request, id):
+        try:
+            access_token = request.COOKIES.get("access_token")
+            if not access_token:
+                return Response(
+                    {"message": "Token não fornecido ou inválido"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            user_data = call_service(
+                "http://nginx_gateway:8000/api/users/me/", access_token
+            )
+
+            if user_data["status_code"] != 200:
+                return Response(
+                    {"message": user_data.get("data").get("message")},
+                    status=user_data["status_code"],
+                )
+
+            product_cart = ProductCart.objects.get(id=id)
+            cart = product_cart.cart
+            if cart.user_id != user_data.get("data").get("data").get("id"):
+                return Response(
+                    {"message": "Este item não existe no carrinho"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            serializer = ProductCartSerializer(product_cart, many=False)
+            return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+        except ProductCart.DoesNotExist:
+            return Response(
+                {"message": "Este item não existe no carrinho"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar o produto no carrinho: {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

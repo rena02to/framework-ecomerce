@@ -1,27 +1,31 @@
 from django.contrib import admin
-from .models import Order, ProductOrder, PaymentMethod
+from .models import (
+    Order,
+    ProductOrder,
+    PaymentMethod,
+    Shipping,
+    TrackingStatus,
+    TrackingEvent,
+)
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user_id", "value", "display_payment_methods")
+    list_display = (
+        "id",
+        "user_id",
+        "value",
+        "delivery_value",
+        "payment_method",
+        "timestamp",
+    )
     search_fields = ("id", "user_id")
-    autocomplete_fields = ("payment_methods",)
-    list_select_related = ("payment_methods",)
-
-    def display_payment_methods(self, obj):
-        return ", ".join([method.name for method in obj.payment_methods.all()])
-
-    display_payment_methods.short_description = "Payment Method"
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.prefetch_related("payment_methods")
+    readonly_fields = ("timestamp",)
 
 
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("id", "name", "active")
     search_fields = ("name",)
 
 
@@ -30,6 +34,40 @@ class ProductOrder(admin.ModelAdmin):
     list_display = ("id", "order", "product_id", "value", "amount")
     autocomplete_fields = ("order",)
     list_select_related = ("order",)
+    search_fields = ("id", "order_id")
+
+
+@admin.register(Shipping)
+class ShippingAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "order",
+        "address",
+        "estimated_delivery",
+        "delivered",
+        "receiver",
+        "traking_code",
+    )
+    autocomplete_fields = ("order",)
+    search_fields = ("id", "order_id", "traking_code")
+
+
+@admin.register(TrackingStatus)
+class TrackingStatusAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+        "description",
+    )
+    search_fields = ("id", "name")
+
+
+@admin.register(TrackingEvent)
+class TrackingEventAdmin(admin.ModelAdmin):
+    list_display = ("id", "shipping", "status", "timestamp")
+    search_fields = ("id",)
+    list_select_related = ("shipping", "status")
+    autocomplete_fields = ("shipping", "status")
 
 
 admin.site.site_url = "SGBD - Serviço de compras"
