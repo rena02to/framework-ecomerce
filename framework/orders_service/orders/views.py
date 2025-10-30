@@ -1,4 +1,11 @@
+import random
 from urllib import response
+from orders_service.utils.payments import (
+    CreditCardProccessPayment,
+    DebitCardProccessPayment,
+    PixProcessPayment,
+    TicketProcessPayment,
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order, ProductOrder, Shipping, TrackingStatus, TrackingEvent
@@ -44,11 +51,20 @@ class OrderView(APIView):
             user_id = user_data.get("data").get("data").get("id")
             data["user_id"] = user_id
 
-            carts_id = data.getlist("cart_id")
+            products_in_cart = call_service(
+                f"http://nginx_gateway:8000/api/carts/products_in_cart/",
+                access_token,
+            )
+            if products_in_cart["status_code"] != 200:
+                return Response(
+                    {"message": products_in_cart.get("data").get("message")},
+                    status=products_in_cart["status_code"],
+                )
+            carts_id = products_in_cart.get("data").get("data")
 
             if not carts_id:
                 return Response(
-                    {"message": "Há campos obrigatórios ausentes."},
+                    {"message": "Não há produtos no carrinho para criar o pedido."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -104,8 +120,13 @@ class OrderView(APIView):
                         {"message": update.get("data").get("message")},
                         status=update["status_code"],
                     )
-
-            data["total"] = total
+            data["value"] = total
+            if total >= 100:
+                data["delivery_value"] = 0
+            elif total < 100 and total >= 50:
+                data["delivery_value"] = 30
+            else:
+                data["delivery_value"] = 50
             serializer = OrderSerializer(data=data)
             if serializer.is_valid():
                 address = user_data.get("data").get("data").get("client").get("address")
@@ -115,6 +136,16 @@ class OrderView(APIView):
                         status=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     )
                 order = serializer.save()
+                if order.payment_method.name == "PIX":
+                    PixProcessPayment(order)
+                elif order.payment_method.name == "Cartão de Débito":
+                    DebitCardProccessPayment(order)
+                elif order.payment_method.name == "Cartão de Crédito":
+                    CreditCardProccessPayment(order)
+                elif order.payment_method.name == "Boleto Bancário":
+                    TicketProcessPayment(order)
+                else:
+                    pass
 
                 now = datetime.now(pytz.timezone("America/Maceio"))
                 shipping = Shipping.objects.create(
@@ -188,7 +219,7 @@ class OrderView(APIView):
                 )
 
             user_id = user_data.get("data").get("data").get("id")
-            orders = Order.objects.filter(user_id=user_id)
+            orders = Order.objects.filter(user_id=user_id).order_by("id")
             serializer = OrderViewSerializer(orders, many=True).data
             for data in serializer:
                 products = data.get("products")
@@ -260,5 +291,50 @@ class OrderDetailView(APIView):
         except Exception as e:
             return Response(
                 {"message": f"Ocorreu um erro ao buscar o pedido: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class LastOrderView(APIView):
+    def get(self, request):
+        try:
+            access_token = request.COOKIES.get("access_token")
+            if not access_token:
+                return Response(
+                    {"message": "Token não fornecido ou inválido"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            user_data = call_service(
+                "http://nginx_gateway:8000/api/users/me/", access_token
+            )
+
+            if user_data["status_code"] != 200:
+                return Response(
+                    {"message": user_data.get("data").get("message")},
+                    status=user_data["status_code"],
+                )
+            if not user_data.get("data").get("data").get("is_client"):
+                return Response(
+                    {"message": "Você não possui uma conta de cliente. Cadastre-se."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            user_id = user_data.get("data").get("data").get("id")
+            order = Order.objects.filter(user_id=user_id).order_by("id").last()
+            if order:
+                product = (
+                    ProductOrder.objects.filter(order__id=order.id)
+                    .order_by("id")
+                    .last()
+                )
+            if product:
+                product = product.product_id
+            if not product or not order:
+                product = None
+            return Response({"data": product})
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar o último pedido: {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

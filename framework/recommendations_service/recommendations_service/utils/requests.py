@@ -2,7 +2,7 @@ import requests
 
 
 def call_service(url, token):
-    cookies = {"token": token}
+    cookies = {"access_token": token}
     r = requests.get(url, cookies=cookies)
     if r.status_code == 401:
         return {

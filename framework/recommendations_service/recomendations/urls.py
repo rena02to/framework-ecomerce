@@ -1,7 +1,11 @@
 from django.urls import path
-from .views import RecomendationsView
+from .views import (
+    RecomendationLastPurchaseView,
+    RecomendationLastAddCartView,
+)
 
 
 urlpatterns = [
-    path("", RecomendationsView.as_view()),
+    path("last_purchase/", RecomendationLastPurchaseView.as_view()),
+    path("last_add_cart/", RecomendationLastAddCartView.as_view()),
 ]

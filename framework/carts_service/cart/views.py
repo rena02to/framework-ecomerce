@@ -172,24 +172,103 @@ class ProductCartView(APIView):
                     {"message": user_data.get("data").get("message")},
                     status=user_data["status_code"],
                 )
-
-            product_cart = ProductCart.objects.get(id=id)
-            cart = product_cart.cart
-            if cart.user_id != user_data.get("data").get("data").get("id"):
+            if not user_data.get("data").get("data").get("is_client"):
                 return Response(
-                    {"message": "Este item não existe no carrinho"},
-                    status=status.HTTP_404_NOT_FOUND,
+                    {"message": "Você não possui uma conta de cliente. Cadastre-se."},
+                    status=status.HTTP_403_FORBIDDEN,
                 )
 
-            serializer = ProductCartSerializer(product_cart, many=False)
+            user_id = user_data.get("data").get("data").get("id")
+            product = ProductCart.objects.get(id=id, cart__user_id=user_id)
+            if not product:
+                return Response(
+                    {"message": "Produto não encontrado no carrinho."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            serializer = ProductCartSerializer(product, many=False)
             return Response({"data": serializer.data}, status=status.HTTP_200_OK)
-        except ProductCart.DoesNotExist:
-            return Response(
-                {"message": "Este item não existe no carrinho"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
         except Exception as e:
             return Response(
-                {"message": f"Ocorreu um erro ao buscar o produto no carrinho: {e}"},
+                {"message": f"Ocorreu um erro ao buscar os produtos no carrinho: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ProductsCartView(APIView):
+    def get(self, request):
+        try:
+            access_token = request.COOKIES.get("access_token")
+            if not access_token:
+                return Response(
+                    {"message": "Token não fornecido ou inválido"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            user_data = call_service(
+                "http://nginx_gateway:8000/api/users/me/", access_token
+            )
+
+            if user_data["status_code"] != 200:
+                return Response(
+                    {"message": user_data.get("data").get("message")},
+                    status=user_data["status_code"],
+                )
+            if not user_data.get("data").get("data").get("is_client"):
+                return Response(
+                    {"message": "Você não possui uma conta de cliente. Cadastre-se."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            user_id = user_data.get("data").get("data").get("id")
+            cart = Cart.objects.get(user_id=user_id).id
+            products = ProductCart.objects.filter(cart__id=cart).values_list(
+                "id", flat=True
+            )
+            return Response({"data": products}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar os produtos no carrinho: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class LastProductAddCartView(APIView):
+    def get(self, request):
+        try:
+            access_token = request.COOKIES.get("access_token")
+            if not access_token:
+                return Response(
+                    {"message": "Token não fornecido ou inválido"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            user_data = call_service(
+                "http://nginx_gateway:8000/api/users/me/", access_token
+            )
+
+            if user_data["status_code"] != 200:
+                return Response(
+                    {"message": user_data.get("data").get("message")},
+                    status=user_data["status_code"],
+                )
+            if not user_data.get("data").get("data").get("is_client"):
+                return Response(
+                    {"message": "Você não possui uma conta de cliente. Cadastre-se."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            user_id = user_data.get("data").get("data").get("id")
+            cart = Cart.objects.get(user_id=user_id).id
+            product = ProductCart.objects.filter(cart__id=cart).order_by("-id").first()
+            if product:
+                product = product.id
+            else:
+                product = None
+            return Response({"data": product}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Ocorreu um erro ao buscar o último produto no carrinho: {e}"
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

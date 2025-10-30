@@ -4,16 +4,9 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-def recommend_by_last_category(self, request, last_product):
-    access_token = request.COOKIES.get("access_token")
-    if not access_token:
-        return Response(
-            {"message": "Token não fornecido ou inválido"},
-            status=status.HTTP_401_UNAUTHORIZED,
-        )
-
+def recommend_by_category(self, request, product):
     product_data = call_service(
-        f"http://nginx_gateway:8000/api/products/{last_product}", access_token
+        f"http://nginx_gateway:8000/api/products/{product}", None
     )
 
     if product_data["status_code"] != 200:
@@ -22,10 +15,14 @@ def recommend_by_last_category(self, request, last_product):
             status=product_data["status_code"],
         )
 
-    category = random.choice(product_data.get("data").get("data").get("categories"))
+    categories = product_data.get("data").get("data").get("categories", None)
+    if categories:
+        category = random.choice(categories).get("id")
+    else:
+        category = None
     products = call_service(
-        f"http://nginx_gateway:8000/api/products/?category={category.get("id")}",
-        access_token,
+        f"http://nginx_gateway:8000/api/products/?category={category if category else ''}",
+        None,
     )
 
     if products["status_code"] != 200:

@@ -16,9 +16,14 @@ class ProductView(APIView):
     def get(self, request):
         try:
             category = request.GET.get("category", None)
+            query = request.GET.get("query", None)
             filters = Q()
             if category:
                 filters &= Q(categories__id=category)
+            if query:
+                filters &= Q(categories__value__icontains=query)
+                filters &= Q(name__icontains=query)
+                filters &= Q(description__icontains=query)
             products = Product.objects.filter(filters, stock__gte=1)
             serializer = ProductSerializer(products, many=True)
             return Response({"data": serializer.data}, status=status.HTTP_200_OK)
@@ -75,5 +80,17 @@ class ProductDetailView(APIView):
         except Exception as e:
             return Response(
                 {"message": f"Ocorreu um erro ao atualizar o produto: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class AvaliableProductsView(APIView):
+    def get(self, request):
+        try:
+            products = Product.objects.filter(stock__gte=1).values_list("id", flat=True)
+            return Response({"data": products}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"message": f"Ocorreu um erro ao buscar os produtos disponíveis: {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

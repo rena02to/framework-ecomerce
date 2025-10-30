@@ -75,6 +75,7 @@ class OrderViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
+            "id",
             "payment_method",
             "value",
             "delivery_value",
