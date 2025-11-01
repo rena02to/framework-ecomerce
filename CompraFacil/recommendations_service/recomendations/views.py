@@ -5,6 +5,7 @@ from .simple import recommend_by_category
 from recommendations_service.utils.requests import call_service
 import random
 
+
 class RecomendationLastPurchaseView(APIView):
     def get(self, request):
         access_token = request.COOKIES.get("access_token")
@@ -22,6 +23,7 @@ class RecomendationLastPurchaseView(APIView):
             if avaliable_products["status_code"] == 200:
                 last_product = random.choice(avaliable_products.get("data").get("data"))
         return recommend_by_category(self, request, last_product)
+
 
 class RecomendationLastAddCartView(APIView):
     def get(self, request):

@@ -6,6 +6,7 @@ from .models import Cart, ProductCart
 from carts_service.utils.requests import call_service, call_service_product
 from django.conf import settings
 from .serializers import ProductCartSerializer
+from babel.numbers import format_currency
 
 
 class CartView(APIView):
@@ -133,6 +134,7 @@ class CartProductView(APIView):
             cart = Cart.objects.get(user_id=user_id).id
             products = ProductCart.objects.filter(cart__id=cart).order_by("-updated_at")
             data = []
+            total = 0
             for product in products:
                 return_product = call_service(
                     f"http://nginx_gateway:8000/api/products/{product.product_id}/",
@@ -143,9 +145,21 @@ class CartProductView(APIView):
                         {"message": user_data.get("data").get("message")},
                         status=return_product["status_code"],
                     )
-                data.append(return_product.get("data"))
+                data.append(
+                    {
+                        "product": return_product.get("data").get("data"),
+                        "amount": product.amount,
+                    }
+                )
+                total += (
+                    return_product.get("data").get("data").get("value_unformat")
+                    * product.amount
+                )
 
-            return Response({"data": data}, status=status.HTTP_200_OK)
+            return Response(
+                {"data": data, "total": format_currency(total, "BRL", locale="pt_BR")},
+                status=status.HTTP_200_OK,
+            )
         except Exception as e:
             return Response(
                 {"message": f"Ocorreu um erro ao buscar os produtos no carrinho: {e}"},

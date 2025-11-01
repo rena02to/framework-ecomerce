@@ -80,24 +80,3 @@ class ClientProfile(models.Model):
         "User", on_delete=models.PROTECT, related_name="client_profile"
     )
     address = models.CharField(max_length=255, blank=True, null=True)
-
-    def clean(self):
-        super().clean()
-        if self.user.birth_date:
-            today = date.today()
-            age = (
-                today.year
-                - self.user.birth_date.year
-                - (
-                    (today.month, today.day)
-                    < (self.user.birth_date.month, self.user.birth_date.day)
-                )
-            )
-            if age < 18:
-                raise ValidationError(
-                    {"birth_date": "Cliente deve ter pelo menos 18 anos."}
-                )
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)

@@ -38,18 +38,18 @@ class LoginView(APIView):
                 key="access_token",
                 value=str(access_token),
                 expires=expiration_access,
-                samesite="None",
+                samesite="Lax",
                 path="/",
-                secure=True,
+                secure=False,
                 httponly=True,
             )
             response.set_cookie(
                 key="refresh_token",
                 value=str(refresh_token),
                 expires=expiration_refresh,
-                samesite="None",
+                samesite="Lax",
                 path="/",
-                secure=True,
+                secure=False,
                 httponly=True,
             )
             return response
