@@ -65,5 +65,21 @@ docker-compose up --build -d
 
 Após os contêineres iniciarem, o Nginx (gateway) estará disponível em http://localhost:8000, roteando as requisições para os microsserviços apropriados (ex: http://localhost:8000/api/users/, http://localhost:8000/api/products/, etc.).
 
+### 8. Criar Superusuários (Opcional)
+Para acessar a interface do Django Admin de cada microsserviço (para depuração ou gerenciamento manual), você precisa criar um superusuário para cada um.
+
+Com os contêineres em execução, abra novos terminais e execute os seguintes comandos para cada serviço que necessitar de um admin.
+
+Exemplo com o serviço de Usuários:
+```bash
+docker-compose exec users_service python manage.py createsuperuser
+```
+
+Exemplo com o serviço de Produtos:
+```bash
+docker-compose exec products_service python manage.py createsuperuser
+```
+
 ### Sobre o Front-end
 Este projeto não inclui um front-end. Ele gera apenas a API de backend. O desenvolvimento da aplicação de interface (seja web ou mobile) é de responsabilidade do implementador e deve consumir a API que agora está em execução.
+
