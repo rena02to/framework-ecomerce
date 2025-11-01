@@ -22,7 +22,7 @@ Siga este passo a passo para configurar e iniciar os serviços.
 Primeiro, clone este repositório para sua máquina local.
 
 ```bash
-git clone <url-do-seu-repositorio>
+git clone https://github.com/rena02to/framework-ecomerce
 ```
 
 ### 2. Acessar a Pasta do Gerador
@@ -86,5 +86,6 @@ Já as pastas /CompraFacil e /new_app são a implementação de novos produtos a
 
 ### Sobre o Front-end
 Este projeto não inclui um front-end. Ele gera apenas a API de backend. O desenvolvimento da aplicação de interface (seja web ou mobile) é de responsabilidade do implementador e deve consumir a API que agora está em execução.
+
 
 
