@@ -1,0 +1,61 @@
+.page{
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+
+.header{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 10px 0;
+  width: 100%;
+}
+
+.header p{
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.header a{
+  text-decoration: none;
+  color: #333;
+  font-size: 18px;
+}
+
+.header a:hover{
+  color: #0070f3;
+}
+
+.form{
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  margin: 50px auto;
+}
+
+.form p{
+  font-size: 35px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.form input{
+  margin-bottom: 15px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form button{
+  padding: 10px;
+  font-size: 18px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

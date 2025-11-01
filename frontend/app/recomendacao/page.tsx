@@ -1,6 +1,6 @@
 'use client';
 import Link from "next/link";
-import styles from "./page.module.css";
+import styles from "./style.module.css";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "react-toastify";
@@ -29,42 +29,18 @@ interface Product {
 export default function HomeComponent() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/products/`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data.data);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
+  
   const addCart = async (id: number) => {
     try {
       const response = await fetch(`http://localhost:8000/api/carts/`, {
         method: 'POST',
-        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ product: id, amount: 1 }),
       });
-
-      const data = await response.json();
-      console.log(data);
+        
       if (response.ok) {
         toast.success('Produto adicionado ao carrinho com sucesso!');
       }else{
@@ -74,6 +50,41 @@ export default function HomeComponent() {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    const MeData = async() => {
+      try{
+        const response = await fetch(`http://localhost:8000/api/users/me/`,{
+          credentials: 'include'
+        })
+                
+        if(!response.ok){
+          router.push('/login');
+        }
+      }  catch(error){
+        console.error(error);
+      }
+    }
+
+    const getRecommendations = async() => {
+      try{
+        const response = await fetch(`http://localhost:8000/api/recommendations/last_purchase/`,{
+          credentials: 'include'
+        })
+
+        if(response.ok){
+          const data = await response.json();
+          setProducts(data.products);
+        }
+      }  catch(error){
+        console.error(error);
+      }
+    }
+
+    MeData();
+    getRecommendations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -86,7 +97,7 @@ export default function HomeComponent() {
         <Link href="/compras">Compras</Link>
       </header>
       <main className={styles.main}>
-        <h1>Produtos</h1>
+        <h1>Recomendações de produtos</h1>
         <div className={styles.productList}>
           {products.map((product: Product) => (
             <div className={styles.productCard} key={product.id}>
