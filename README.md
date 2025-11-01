@@ -1,4 +1,4 @@
-# Nome do Projeto
+# Framework e-comerce
 
 Este projeto utiliza uma arquitetura de microsserviços baseada em Linha de Produto de Software (LPS) para gerar uma aplicação de backend customizada.
 
@@ -80,6 +80,11 @@ Exemplo com o serviço de Produtos:
 docker-compose exec products_service python manage.py createsuperuser
 ```
 
+### Sobre as pastas
+A pasta /framework é a pasta base do projeto, que contém todos os arquivos necessários para a criação de um novo produto.
+Já as pastas /CompraFacil e /new_app são a implementação de novos produtos a partir do framework base.
+
 ### Sobre o Front-end
 Este projeto não inclui um front-end. Ele gera apenas a API de backend. O desenvolvimento da aplicação de interface (seja web ou mobile) é de responsabilidade do implementador e deve consumir a API que agora está em execução.
+
 
